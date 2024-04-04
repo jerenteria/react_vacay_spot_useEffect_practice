@@ -7,11 +7,21 @@ import DeleteConfirmation from "./components/DeleteConfirmation.jsx";
 import logoImg from "./assets/logo.png";
 import { sortPlacesByDistance } from "./loc.js";
 
+
+  // get stored places and their ids 
+  // outside of main function so that it only runs once when the application is first loaded
+  const storedIds = JSON.parse(localStorage.getItem("selectedPlaces")) || [];
+  const storedPlaces = storedIds.map((id) =>
+    AVAILABLE_PLACES.find((place) => place.id === id)
+  );
+
 function App() {
-  const modal = useRef();
+  const [modalIsOpen, setModalIsOpen] = useState();
   const selectedPlace = useRef();
   const [pickedPlaces, setPickedPlaces] = useState([]);
   const [availablePlaces, setAvailablePlaces] = useState([]); // manages available places(starts with empty array)
+
+
 
   // does not return a val needs 2 args
   // helps with not being stuck in infinite loop causing app to crash
@@ -34,12 +44,12 @@ function App() {
   }, []);
 
   function handleStartRemovePlace(id) {
-    modal.current.open();
+    setModalIsOpen();
     selectedPlace.current = id;
   }
 
   function handleStopRemovePlace() {
-    modal.current.close();
+    setModalIsOpen(false) ;
   }
 
   function handleSelectPlace(id) {
@@ -65,12 +75,18 @@ function App() {
     setPickedPlaces((prevPickedPlaces) =>
       prevPickedPlaces.filter((place) => place.id !== selectedPlace.current)
     );
-    modal.current.close();
+    setModalIsOpen(false);
+
+    const storedIds = JSON.parse(localStorage.getItem("selectedPlaces")) || [];
+    localStorage.setItem(
+      "selectedPlaces",
+      JSON.stringify(storedIds.filter((id) => id !== selectedPlace.current))
+    );
   }
 
   return (
     <>
-      <Modal ref={modal}>
+      <Modal open={modalIsOpen}>
         <DeleteConfirmation
           onCancel={handleStopRemovePlace}
           onConfirm={handleRemovePlace}
